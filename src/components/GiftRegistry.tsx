@@ -54,9 +54,7 @@ export default function GiftRegistry() {
             <div className="font-mono text-3xl sm:text-4xl font-bold text-[#1B4332] tracking-widest">
               {accountDetails.accountNumber}
             </div>
-            <p className="text-xs text-slate-600 font-medium">
-              Account Name: <strong className="text-[#1B4332] font-semibold">{accountDetails.accountName}</strong>
-            </p>
+
 
             <button
               onClick={handleCopy}
