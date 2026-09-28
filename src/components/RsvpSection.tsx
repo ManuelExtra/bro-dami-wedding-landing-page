@@ -384,7 +384,7 @@ export default function RsvpSection() {
                 className="w-full py-4 rounded-xl font-bold text-xs uppercase tracking-widest bg-[#1B4332] text-white hover:bg-[#2D6A4F] shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {loading ? (
-                  <span>Processing Brevo RSVP...</span>
+                  <span>Processing RSVP...</span>
                 ) : (
                   <>
                     <Send className="w-4 h-4 text-[#D96B27]" />

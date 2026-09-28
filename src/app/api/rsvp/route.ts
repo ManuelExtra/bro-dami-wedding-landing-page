@@ -65,8 +65,6 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     };
 
-    console.log("📥 New RSVP Received:", rsvpEntry);
-
     // Brevo API Integration
     const brevoApiKey = process.env.BREVO_API_KEY;
 
@@ -112,12 +110,10 @@ export async function POST(request: Request) {
         if (!contactRes.ok) {
           const contactError = await contactRes.json();
           console.warn("⚠️ Brevo Contact List API Warning:", contactError);
-        } else {
-          console.log(`✅ Brevo Contact Created/Updated for ${email} (List: ${listIds ? listIds.join(",") : "Default"})`);
         }
 
         // 2. Send Confirmation Email via Brevo Transactional Email API
-        const senderEmail = process.env.BREVO_SENDER_EMAIL || "rsvp@dami-and-ololade.wedding";
+        const senderEmail = process.env.BREVO_SENDER_EMAIL;
         const emailRes = await fetch("https://api.brevo.com/v3/smtp/email", {
           method: "POST",
           headers: {
@@ -159,14 +155,10 @@ export async function POST(request: Request) {
         if (!emailRes.ok) {
           const emailError = await emailRes.json();
           console.warn("⚠️ Brevo Transactional Email Error:", emailError);
-        } else {
-          console.log("✅ Confirmation Email Sent via Brevo to:", email);
         }
       } catch (brevoErr) {
         console.error("❌ Brevo API Exception:", brevoErr);
       }
-    } else {
-      console.log("💡 Brevo integration ready. Set BREVO_API_KEY and BREVO_LIST_ID in .env.local to capture contacts on your Brevo list.");
     }
 
     return NextResponse.json({
