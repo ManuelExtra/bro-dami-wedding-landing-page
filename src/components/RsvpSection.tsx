@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import confetti from "canvas-confetti";
-import { CheckCircle2, Heart, Sparkles, Send, Utensils, Users, Mail, Phone, User, QrCode, ShieldCheck, Contact2 } from "lucide-react";
+import { CheckCircle2, Heart, Sparkles, Send, Mail, Phone, User, QrCode, ShieldCheck, Contact2 } from "lucide-react";
 
 export default function RsvpSection() {
   const [formData, setFormData] = useState({
@@ -11,8 +11,6 @@ export default function RsvpSection() {
     phone: "",
     attendance: "attending",
     familySide: "Bride's family",
-    guestCount: "1",
-    mealChoice: "Smokey Party Jollof & Grilled Croaker Fish",
     specialMessage: "",
   });
 
@@ -20,6 +18,42 @@ export default function RsvpSection() {
   const [submitted, setSubmitted] = useState(false);
   const [ticketId, setTicketId] = useState("");
   const [brevoActive, setBrevoActive] = useState(false);
+  const [countryCode, setCountryCode] = useState("+234");
+  const [phoneDigits, setPhoneDigits] = useState("");
+
+  const countryOptions = [
+    { code: "+234", flag: "🇳🇬", name: "Nigeria (+234)" },
+    { code: "+44", flag: "🇬🇧", name: "UK (+44)" },
+    { code: "+1", flag: "🇺🇸", name: "US/CA (+1)" },
+    { code: "+233", flag: "🇬🇭", name: "Ghana (+233)" },
+    { code: "+27", flag: "🇿🇦", name: "South Africa (+27)" },
+    { code: "+971", flag: "🇦🇪", name: "UAE (+971)" },
+    { code: "+33", flag: "🇫🇷", name: "France (+33)" },
+    { code: "+49", flag: "🇩🇪", name: "Germany (+49)" },
+    { code: "+39", flag: "🇮🇹", name: "Italy (+39)" },
+    { code: "+353", flag: "🇮🇪", name: "Ireland (+353)" },
+  ];
+
+  const handlePhoneUpdate = (code: string, digits: string) => {
+    setCountryCode(code);
+    setPhoneDigits(digits);
+
+    const trimmed = digits.trim();
+    if (!trimmed) {
+      setFormData((prev) => ({ ...prev, phone: "" }));
+      return;
+    }
+
+    if (trimmed.startsWith("+")) {
+      setFormData((prev) => ({ ...prev, phone: trimmed }));
+    } else {
+      let num = trimmed;
+      if (num.startsWith("0")) {
+        num = num.substring(1);
+      }
+      setFormData((prev) => ({ ...prev, phone: `${code}${num}` }));
+    }
+  };
 
   const affiliationOptions = [
     "Bride's family",
@@ -41,6 +75,7 @@ export default function RsvpSection() {
     "Dois School",
     "Unilag Microfinance Bank",
     "Kongapay",
+    "TEC",
     "Quantum Travels",
     "Bayo Arikawe & Co Chartered Accountant",
     "Cacsa fpi",
@@ -114,7 +149,7 @@ export default function RsvpSection() {
             Confirm Your <span className="text-[#D96B27]">RSVP</span>
           </h2>
           <p className="text-slate-600 text-xs sm:text-sm font-medium">
-            Please select your guest affiliation and RSVP info for Ololade Martha &amp; Oluwadamilola Ayomide&apos;s wedding.
+            Please fill out your RSVP response for Ololade Martha &amp; Oluwadamilola Ayomide&apos;s wedding.
           </p>
         </div>
 
@@ -139,7 +174,7 @@ export default function RsvpSection() {
                 {brevoActive && (
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold mt-2">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Confirmation Email Sent via Brevo</span>
+                    <span>Confirmation Email Sent</span>
                   </div>
                 )}
               </div>
@@ -169,17 +204,13 @@ export default function RsvpSection() {
                     <span className="text-slate-500 block text-[10px] uppercase font-bold">Ticket Code</span>
                     <strong className="text-[#D96B27] font-mono font-bold">{ticketId}</strong>
                   </div>
-                  <div className="col-span-2">
-                    <span className="text-slate-500 block text-[10px] uppercase font-bold">Guest Affiliation</span>
-                    <span className="text-[#1B4332] font-semibold">{formData.familySide}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block text-[10px] uppercase font-bold">Party Size</span>
-                    <span className="text-[#1B4332] font-medium">{formData.guestCount} Person(s)</span>
-                  </div>
                   <div>
                     <span className="text-slate-500 block text-[10px] uppercase font-bold">Attendance</span>
-                    <span className="text-[#1B4332] font-medium capitalize">{formData.attendance}</span>
+                    <span className="text-[#1B4332] font-semibold capitalize">{formData.attendance}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[10px] uppercase font-bold">Guest Affiliation</span>
+                    <span className="text-[#1B4332] font-semibold">{formData.familySide}</span>
                   </div>
                 </div>
 
@@ -196,16 +227,15 @@ export default function RsvpSection() {
               </button>
             </div>
           ) : (
-            /* RSVP Form with Exact Affiliation Options */
+            /* RSVP Form without guestCount and mealChoice */
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Attendance Selection */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label
-                  className={`p-4 rounded-2xl border cursor-pointer flex items-center gap-3 transition-all ${
-                    formData.attendance === "attending"
-                      ? "bg-[#1B4332] text-white border-[#1B4332]"
-                      : "bg-white text-slate-700 border-slate-200 hover:border-[#1B4332]/40"
-                  }`}
+                  className={`p-4 rounded-2xl border cursor-pointer flex items-center gap-3 transition-all ${formData.attendance === "attending"
+                    ? "bg-[#1B4332] text-white border-[#1B4332]"
+                    : "bg-white text-slate-700 border-slate-200 hover:border-[#1B4332]/40"
+                    }`}
                 >
                   <input
                     type="radio"
@@ -224,11 +254,10 @@ export default function RsvpSection() {
                 </label>
 
                 <label
-                  className={`p-4 rounded-2xl border cursor-pointer flex items-center gap-3 transition-all ${
-                    formData.attendance === "declining"
-                      ? "bg-[#4A2511] text-white border-[#4A2511]"
-                      : "bg-white text-slate-700 border-slate-200 hover:border-[#4A2511]/40"
-                  }`}
+                  className={`p-4 rounded-2xl border cursor-pointer flex items-center gap-3 transition-all ${formData.attendance === "declining"
+                    ? "bg-[#4A2511] text-white border-[#4A2511]"
+                    : "bg-white text-slate-700 border-slate-200 hover:border-[#4A2511]/40"
+                    }`}
                 >
                   <input
                     type="radio"
@@ -302,37 +331,33 @@ export default function RsvpSection() {
                 </select>
               </div>
 
-              {/* Phone & Party Size */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[#1B4332] flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-[#D96B27]" />
-                    Phone Number
-                  </label>
+              {/* Phone Number */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#1B4332] flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-[#D96B27]" />
+                  Phone Number
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    aria-label="Country Code"
+                    value={countryCode}
+                    onChange={(e) => handlePhoneUpdate(e.target.value, phoneDigits)}
+                    className="px-3 py-3 rounded-xl bg-white border border-slate-300 focus:border-[#1B4332] focus:outline-none text-slate-800 text-sm font-medium shrink-0 cursor-pointer"
+                  >
+                    {countryOptions.map((c) => (
+                      <option key={c.code + c.name} value={c.code}>
+                        {c.flag} {c.code}
+                      </option>
+                    ))}
+                  </select>
                   <input
                     type="tel"
                     name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
+                    value={phoneDigits}
+                    onChange={(e) => handlePhoneUpdate(countryCode, e.target.value)}
                     placeholder="0803 000 0000"
                     className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 focus:border-[#1B4332] focus:outline-none text-slate-800 text-sm"
                   />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[#1B4332] flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-[#D96B27]" />
-                    Number of Guests
-                  </label>
-                  <select
-                    name="guestCount"
-                    value={formData.guestCount}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 focus:border-[#1B4332] focus:outline-none text-slate-800 text-sm"
-                  >
-                    <option value="1">1 Person</option>
-                    <option value="2">2 Persons</option>
-                  </select>
                 </div>
               </div>
 
