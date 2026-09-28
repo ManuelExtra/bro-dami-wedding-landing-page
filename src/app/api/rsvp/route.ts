@@ -5,35 +5,37 @@ function formatToE164(phone?: string | null, defaultDialCode: string = "+234"): 
   const trimmed = phone.trim();
   if (!trimmed) return null;
 
-  // 1. If already in international format starting with +
-  if (trimmed.startsWith("+")) {
-    const digitsOnly = trimmed.substring(1).replace(/\D/g, "");
-    if (digitsOnly.length >= 7 && digitsOnly.length <= 15) {
-      return `+${digitsOnly}`;
-    }
-    return null;
-  }
-
-  // Remove non-digit characters
+  // Extract digits only
   let digits = trimmed.replace(/\D/g, "");
   if (!digits) return null;
 
-  const dialDigits = defaultDialCode.replace(/\D/g, "");
+  const defaultDialDigits = defaultDialCode.replace(/\D/g, ""); // "234"
 
-  // 2. Handle leading zero (e.g., 07072182999 -> strip 0 and prepend dial code +234)
-  if (digits.startsWith("0")) {
-    digits = dialDigits + digits.substring(1);
-  } else if (digits.startsWith(dialDigits) && digits.length >= 10) {
-    // Already includes country code without + prefix (e.g. 2347072182999)
-    digits = digits;
-  } else {
-    // Pure local number without dial code or zero (e.g., 7072182999 -> prepend +234)
-    digits = dialDigits + digits;
+  // 1. Deduplicate double dial code (e.g., 2342347072182999 -> 2347072182999)
+  if (digits.startsWith(defaultDialDigits + defaultDialDigits)) {
+    digits = digits.substring(defaultDialDigits.length);
   }
 
-  // Validate E.164 length (between 7 and 15 digits total)
-  if (digits.length >= 7 && digits.length <= 15) {
-    return `+${digits}`;
+  // 2. Normalize dial code & zero prefix
+  if (digits.startsWith(defaultDialDigits)) {
+    // If user entered 23407072182999 (dial code followed by 0)
+    const rest = digits.substring(defaultDialDigits.length);
+    if (rest.startsWith("0")) {
+      digits = defaultDialDigits + rest.substring(1);
+    }
+  } else if (digits.startsWith("0")) {
+    // Local 07072182999 -> 2347072182999
+    digits = defaultDialDigits + digits.substring(1);
+  } else if (digits.length <= 10) {
+    // Local 7072182999 -> 2347072182999
+    digits = defaultDialDigits + digits;
+  }
+
+  const e164 = `+${digits}`;
+
+  // Validate E.164 length (between 8 and 15 digits total)
+  if (digits.length >= 8 && digits.length <= 15) {
+    return e164;
   }
 
   return null;

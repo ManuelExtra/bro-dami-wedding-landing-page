@@ -44,15 +44,19 @@ export default function RsvpSection() {
       return;
     }
 
-    if (trimmed.startsWith("+")) {
-      setFormData((prev) => ({ ...prev, phone: trimmed }));
-    } else {
-      let num = trimmed;
-      if (num.startsWith("0")) {
-        num = num.substring(1);
-      }
-      setFormData((prev) => ({ ...prev, phone: `${code}${num}` }));
+    const codeDigits = code.replace(/\D/g, "");
+    let clean = trimmed.replace(/\D/g, "");
+
+    // If user pasted or typed dial code inside the input box (e.g. 2347072182999)
+    if (clean.startsWith(codeDigits)) {
+      clean = clean.substring(codeDigits.length);
     }
+    // Strip leading zero if present
+    if (clean.startsWith("0")) {
+      clean = clean.substring(1);
+    }
+
+    setFormData((prev) => ({ ...prev, phone: `${code}${clean}` }));
   };
 
   const affiliationOptions = [
