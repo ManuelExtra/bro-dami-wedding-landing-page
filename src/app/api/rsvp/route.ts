@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
-function formatToE164(phone?: string | null): string | null {
+function formatToE164(phone?: string | null, defaultDialCode: string = "+234"): string | null {
   if (!phone) return null;
   const trimmed = phone.trim();
   if (!trimmed) return null;
 
-  // If already in international format starting with +
+  // 1. If already in international format starting with +
   if (trimmed.startsWith("+")) {
     const digitsOnly = trimmed.substring(1).replace(/\D/g, "");
     if (digitsOnly.length >= 7 && digitsOnly.length <= 15) {
@@ -18,9 +18,17 @@ function formatToE164(phone?: string | null): string | null {
   let digits = trimmed.replace(/\D/g, "");
   if (!digits) return null;
 
-  // Handle Nigerian numbers starting with 0 (e.g., 07072182999 -> 2347072182999)
+  const dialDigits = defaultDialCode.replace(/\D/g, "");
+
+  // 2. Handle leading zero (e.g., 07072182999 -> strip 0 and prepend dial code +234)
   if (digits.startsWith("0")) {
-    digits = "234" + digits.substring(1);
+    digits = dialDigits + digits.substring(1);
+  } else if (digits.startsWith(dialDigits) && digits.length >= 10) {
+    // Already includes country code without + prefix (e.g. 2347072182999)
+    digits = digits;
+  } else {
+    // Pure local number without dial code or zero (e.g., 7072182999 -> prepend +234)
+    digits = dialDigits + digits;
   }
 
   // Validate E.164 length (between 7 and 15 digits total)
