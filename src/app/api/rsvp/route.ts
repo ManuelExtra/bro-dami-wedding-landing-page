@@ -98,23 +98,27 @@ export async function POST(request: Request) {
           contactPayload.listIds = listIds;
         }
 
-        const contactRes = await fetch("https://api.brevo.com/v3/contacts", {
+        // 1. Add / Update Contact in Brevo
+        const contactPromise = fetch("https://api.brevo.com/v3/contacts", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "api-key": brevoApiKey,
           },
           body: JSON.stringify(contactPayload),
+          signal: AbortSignal.timeout(6000),
+        }).then(async (res) => {
+          if (!res.ok) {
+            const contactError = await res.json().catch(() => ({}));
+            console.warn("⚠️ Brevo Contact List API Warning:", contactError);
+          }
+        }).catch((err) => {
+          console.warn("⚠️ Brevo Contact API Warning:", err?.message || err);
         });
 
-        if (!contactRes.ok) {
-          const contactError = await contactRes.json();
-          console.warn("⚠️ Brevo Contact List API Warning:", contactError);
-        }
-
         // 2. Send Confirmation Email via Brevo Transactional Email API
-        const senderEmail = process.env.BREVO_SENDER_EMAIL;
-        const emailRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+        const senderEmail = process.env.BREVO_SENDER_EMAIL || "damilola.ololade.love@gmail.com";
+        const emailPromise = fetch("https://api.brevo.com/v3/smtp/email", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -150,14 +154,19 @@ export async function POST(request: Request) {
               </div>
             `,
           }),
+          signal: AbortSignal.timeout(6000),
+        }).then(async (res) => {
+          if (!res.ok) {
+            const emailError = await res.json().catch(() => ({}));
+            console.warn("⚠️ Brevo Transactional Email Error:", emailError);
+          }
+        }).catch((err) => {
+          console.warn("⚠️ Brevo Email API Warning:", err?.message || err);
         });
 
-        if (!emailRes.ok) {
-          const emailError = await emailRes.json();
-          console.warn("⚠️ Brevo Transactional Email Error:", emailError);
-        }
+        await Promise.allSettled([contactPromise, emailPromise]);
       } catch (brevoErr) {
-        console.error("❌ Brevo API Exception:", brevoErr);
+        console.warn("⚠️ Brevo Integration Warning:", brevoErr);
       }
     }
 
